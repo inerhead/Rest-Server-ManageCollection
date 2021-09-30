@@ -34,5 +34,10 @@ const UsuarioSchema = Schema({
     },
 });
 
+// Para sacar algunas propiedades al momento de devolver el objeto
+UsuarioSchema.methods.toJSON = function() {
+    const { __v, password, ...usuario } = this.toObject();
+    return usuario;
+}
 
 module.exports = model('Usuario', UsuarioSchema);

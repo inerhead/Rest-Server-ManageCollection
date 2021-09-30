@@ -1,6 +1,6 @@
 const { response, request } = require('express');
-const bcryptjs = require('bcryptjs');
 const Usuario = require('../model/user');
+const createCustomHash = require('../helpers/encrypt');
 
 
 const usersGet = (req = request, res = response) => {
@@ -16,22 +16,15 @@ const usersGet = (req = request, res = response) => {
 };
 
 const usersPost = async(req, res = response) => {
-    
+
     const { nombre, email, password, rol } = req.body;
 
-    // verificar si el correo existe
-    const existeemail = await Usuario.findOne({ email });
     const usuario = new Usuario({ nombre, email, password, rol });
-    if (existeemail) {
-        return res.status(400).json({ msg: "El correo ya esta registrado" });
-    }
-    // crypt the password
-    const salt = bcryptjs.genSaltSync();
-    usuario.password = bcryptjs.hashSync(password, salt);
-
-
+    // crypt the password 
+    console.log('encriptando');
+    usuario.password = createCustomHash(password);
+    console.log('encriptado');
     await usuario.save();
-
 
     res.json({
         msj: 'Hello World POST 5',
@@ -39,12 +32,28 @@ const usersPost = async(req, res = response) => {
     });
 };
 
-const userPut = (req = request, res = response) => {
+const userPut = async(req = request, res = response) => {
     const { usuarioId } = req.params;
-    const body = req.body;
+    const { password, google, email, estado, ...resto } = req.body;
+
+    const usuarioBD = await Usuario.findById(usuarioId);
+    if (!usuarioBD) {
+        res.status(400).json({ error: "ID usuario no existe" });
+        return;
+    }
+
+
+
+    if (password) {
+        resto.password = createCustomHash(password);
+    }
+
+    const usuario = await Usuario.findByIdAndUpdate(usuarioId, resto);
+
+
     res.json({
         msj: 'Hello World PUT 2',
-        body: usuarioId
+        usuario
     });
 };
 const usersPutError = (req, res = response) => {
