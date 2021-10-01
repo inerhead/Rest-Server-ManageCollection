@@ -3,15 +3,35 @@ const Usuario = require('../model/user');
 const createCustomHash = require('../helpers/encrypt');
 
 
-const usersGet = (req = request, res = response) => {
+const usersGet = async(req = request, res = response) => {
 
-    const { id, name, page = 1 } = req.query;
+    const { from = 0, limit = 3 } = req.query;
+
+
+
+    const [usuarios, count] = await Promise.all([Usuario
+        .find({ estado: true })
+        .skip(Number(from))
+        .limit(Number(limit)),
+        Usuario.countDocuments({ estado: true })
+    ]);
+
+    /* const usuarios = await Usuario
+         .find({ estado: true })
+         .skip(Number(from))
+         .limit(Number(limit));
+
+     const count = await Usuario.countDocuments({ estado: true });*/
+    /* res.json({
+         VideoJuego: 'Contra',
+         id,
+         name,
+         page
+     });*/
 
     res.json({
-        VideoJuego: 'Contra',
-        id,
-        name,
-        page
+        count,
+        usuarios,
     });
 };
 
@@ -36,13 +56,6 @@ const userPut = async(req = request, res = response) => {
     const { usuarioId } = req.params;
     const { password, google, email, estado, ...resto } = req.body;
 
-    const usuarioBD = await Usuario.findById(usuarioId);
-    if (!usuarioBD) {
-        res.status(400).json({ error: "ID usuario no existe" });
-        return;
-    }
-
-
 
     if (password) {
         resto.password = createCustomHash(password);
@@ -64,8 +77,16 @@ const usersPutError = (req, res = response) => {
     //res.send('Nada que ver ' + dirRoot);
 };
 
-const usersDelete = (req, res = response) => {
-    res.send('Hello World DELETE 123');
+const usersDelete = async(req, res = response) => {
+    const { id } = req.params;
+
+    const usuario = await Usuario.findByIdAndUpdate(id, { estado: false });
+    const { nombre } = usuario;
+
+
+    res.json({
+        nombre
+    });
 };
 
 

@@ -20,9 +20,14 @@ router.post('/', [
 router.put('/:usuarioId', [
     check('usuarioId', "No es un ID mongo Adecuado").isMongoId(),
     check('usuarioId').custom(existeIdUsuario),
+    // check('rol').custom(validarRol),
     validarCampos
 ], userPut);
-router.delete('/', usersDelete);
+router.delete('/:id', [
+    check('id', "No es un ID mongo Adecuado").isMongoId(),
+    check('id').custom(existeIdUsuario),
+    validarCampos
+], usersDelete);
 router.put('*', usersPutError);
 
 
